@@ -241,3 +241,10 @@ def word_lcs_as_vectors(lcs,dim,upto_level,clazz,from_level=0):
 
 def rank(vectors):
     return np.linalg.matrix_rank( list(vectors) )
+
+def shuffle_word_to_concatenation_word( sw ):
+    yield (ConcatenationWord(sw), 1)
+
+def concatenation_word_to_shuffle_word( cw ):
+    yield (ShuffleWord(cw), 1)
+

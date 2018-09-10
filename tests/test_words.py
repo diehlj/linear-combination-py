@@ -43,6 +43,18 @@ def test_concatentation_word():
     assert lc_1 == lc_1.apply_linear_function( ConcatenationWord.coproduct )\
                .apply_linear_function( lc.Tensor.id_otimes_fn( ConcatenationWord.counit ) )
 
+    # inner product is a bit awkward:
+    # The natural dual of the concatenation algebra is the shuffle algebra.
+    # But the method LinearCombination.inner_product only works with vectors of the exact same type.
+    # Hence we need to transform one of them into the other.
+
+    assert 1 == lc.LinearCombination.inner_product( lc_1, lc_1 )
+
+    lc_sw_1 = lc.LinearCombination.lift( ShuffleWord( (1,2) ) )
+    assert 0 == lc.LinearCombination.inner_product( lc_sw_1, lc_1 )
+    assert 1 == lc.LinearCombination.inner_product( lc_sw_1.apply_linear_function( shuffle_word_to_concatenation_word ), lc_1 )
+
+
 def test_shuffle_word():
     t = lambda x,y: lc.Tensor( (x,y) ) 
     def sw(*args):
@@ -86,6 +98,7 @@ def test_shuffle_word():
                     .apply_linear_function( ShuffleWord.coproduct )\
                     .apply_linear_function( lc.Tensor.id_otimes_fn( ShuffleWord.counit) )
                     #.apply_linear_function( lc.Tensor.fn_otimes_linear( lc.id, ShuffleWord.counit ) )
+
 
 def test_half_shuffle_area():
     def lsw(*args):
