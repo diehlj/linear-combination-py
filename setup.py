@@ -3,7 +3,7 @@ import setuptools
 setup(name='linear-combination-py',
       #python_requires='>=3.5.2',
       version='0.1',
-      packages=['linear_combination']
+      packages=['linear_combination'],
       #description='',
       author='Joscha Diehl',
       #author_email='',
