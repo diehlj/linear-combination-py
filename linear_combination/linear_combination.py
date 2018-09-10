@@ -78,7 +78,7 @@ class LinearCombination(dict):
             return reduce( operator.mul, [self] * n )
 
     @staticmethod
-    def generator_to_lc(gen):
+    def from_generator(gen):
         """ ("ab", 2), ("efg", 17), ("ab":-5)"
             -> {"ab": -3, "efg": 17} """
         res = defaultdict(int)

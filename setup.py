@@ -7,7 +7,7 @@ def readme():
 
 setuptools.setup(name='linear-combination-py',
       #python_requires='>=3.5.2',
-      version='0.1.2',
+      version='0.1.3',
       packages=['linear_combination'],
       description='A small library implementing linear combinations of "stuff".',
       long_description=readme(),
