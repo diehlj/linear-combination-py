@@ -12,9 +12,9 @@ That is {"a" 5, "b" 17} stands for the linear combination 5 * "a" + 17 * "b"::
     # => "+9.10 x +8 y +3 z"
 
 The main application is to `Hopf Algebras <https://en.wikipedia.org/wiki/Hopf_algebra>`_.
+
 The package comes with two sample implementations of Hopf algebrase;
 the concatenation Hop algebra and, its dual, the shuffle algebras (Reutenauer - Free Lie algebras).
-
 Much of its code is borrowed from `free-lie-algebra-py <https://github.com/bottler/free-lie-algebra-py>`_, by Jeremy Reizenstein::
 
     import linear_combination.linear_combination as lc

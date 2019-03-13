@@ -91,13 +91,16 @@ class LinearCombination(dict):
         # https://stackoverflow.com/questions/11290092/python-elegantly-merge-dictionaries-with-sum-of-values
         # https://ideone.com/7IzSx
         res = defaultdict(int)
-        for k1, v1 in self.items():
-            for k, v in f(k1):
-                res[k] += v * v1
+        for x1, c1 in self.items():
+            result = f(x1)
+            if isinstance(result, dict):
+                result = result.items()
+            for x, c in f(x1):
+                res[x] += c * c1
         return LinearCombination(res).remove_zeros()
 
     @staticmethod
-    def apply_bilinear_function(f, x, y):
+    def apply_bilinear_function(f, x, y): # TODO f should be at the end .. then this does not have to be static
         """Slightly faster than apply_multilinear_function in the bilinear case."""
         res = defaultdict(int)
         for k1, v1 in x.items():
@@ -158,16 +161,22 @@ class LinearCombination(dict):
         return LinearCombination( {x : 1} )
 
     @staticmethod
-    def from_str(s, clazz):
-        # TODO sympy coefficients
+    def from_str(s, clazz, sympy_coefficients=False):
         element_parser = clazz.parser()
-        coeff_i=pp.Suppress("[")+pp.Word(pp.nums)+pp.Suppress("]")
-        coeff_i.setParseAction(lambda t: [int(t[0])])
-        coeff_f=pp.Suppress("[")+pp.Combine(pp.Optional(pp.Word(pp.nums))+
-                                            "."+
-                                            pp.Optional(pp.Word(pp.nums)))+pp.Suppress("]")
-        coeff_f.setParseAction(lambda t: [float(t[0])])
-        coeff=pp.Optional(coeff_i|coeff_f,1)
+
+        if sympy_coefficients:
+            from sympy.parsing.sympy_parser import parse_expr
+            coeff_s = pp.QuotedString("[",endQuoteChar="]")
+            coeff_s.setParseAction(lambda t: [parse_expr(t[0])])
+            coeff = pp.Optional(coeff_s,1)
+        else:        
+            coeff_i=pp.Suppress("[")+pp.Word(pp.nums)+pp.Suppress("]")
+            coeff_i.setParseAction(lambda t: [int(t[0])])
+            coeff_f=pp.Suppress("[")+pp.Combine(pp.Optional(pp.Word(pp.nums))+
+                                                "."+
+                                                pp.Optional(pp.Word(pp.nums)))+pp.Suppress("]")
+            coeff_f.setParseAction(lambda t: [float(t[0])])
+            coeff=pp.Optional(coeff_i|coeff_f,1)
         if six.PY2:
             minus = pp.Literal("-")
         else:
@@ -184,15 +193,15 @@ class LinearCombination(dict):
         return out  
 
     @staticmethod
-    def otimes(lc1,lc2):
+    def otimes(lc1,lc2): # XXX shouldnt this be in Tensor?
         """Tensor product of two LinearCombination."""
         res = defaultdict(int)
         tmp = []
-        for k1, v1 in lc1.items():
-            for k2, v2 in lc2.items():
-                if not isinstance(k1, Tensor): k1 = Tensor( [k1] )
-                if not isinstance(k2, Tensor): k2 = Tensor( [k2] )
-                res[k1 + k2] += v1 * v2
+        for x1, c1 in lc1.items():
+            for x2, c2 in lc2.items():
+                if not isinstance(x1, Tensor): x1 = Tensor( [x1] )
+                if not isinstance(x2, Tensor): x2 = Tensor( [x2] )
+                res[x1 + x2] += c1 * c2
         return LinearCombination(res).remove_zeros()
 
 def id(x):
@@ -204,6 +213,22 @@ def lie_bracket(x1,x2):
     for prev in x2 * x1:
         yield (prev[0], -prev[1])
 
+#import collections
+#if not six.PY2:
+#    basestring = str
+#def issequenceforme(obj):
+#    if isinstance(obj, basestring):
+#        return False
+#    return isinstance(obj, collections.Sequence)
+
+def _flatten_tensor(t):
+    ret = []
+    for x in t:
+        if isinstance(x,Tensor):
+            ret += _flatten_tensor(x)
+        else:
+            ret.append(x)
+    return ret
 
 class Tensor(tuple):
     def __new__(cls,*args):
@@ -236,12 +261,14 @@ class Tensor(tuple):
         for z in t[0] * t[1]: # python2.7
             yield z
 
+
     @staticmethod
     def fn_otimes_linear(*fns):
         """A,B linear maps. Returns A \\otimes B."""
+
         def f(t):
             for r_ in itertools.product( *map( lambda i: fns[i](t[i]), range(len(fns))) ):
-                yield (Tensor(map(lambda x: x[0], r_)), reduce(operator.mul,map(lambda x:x[1],r_)))
+                yield (Tensor(_flatten_tensor(map(lambda x: x[0], r_))), reduce(operator.mul,map(lambda x:x[1], r_))) # XXX flatten slow?
         return f
 
     @staticmethod
@@ -249,11 +276,12 @@ class Tensor(tuple):
         """A,B bilinear maps. Returns A \\otimes B."""
         def f(t1,t2):
             for r_ in itertools.product( *map( lambda i: fns[i](t1[i],t2[i]), range(len(fns))) ):
-                yield (Tensor( map(lambda x: x[0], r_) ), reduce(operator.mul,map(lambda x:x[1],r_)))
+                yield (Tensor(map(lambda x: x[0], r_) ), reduce(operator.mul,map(lambda x:x[1], r_)))
         return f
 
     @staticmethod
     def id_otimes_fn(h):
+        # TODO document parameters/return of h needed
         """h is real-valued.
            x \\otimes y -> h(y) * x"""
         def f(t):
