@@ -67,6 +67,10 @@ class ConcatenationWord(tuple):
     def from_str(s):
         return lc.LinearCombination.lift(ConcatenationWord( (int(i) for i in s) ))
 
+    @staticmethod
+    def from_list(ell):
+        return lc.LinearCombination.lift(ConcatenationWord( (int(i) for i in ell) ))
+
     def __mul__(self,other):
         """Concatenation product."""
         yield (ConcatenationWord(self+other),1)
@@ -159,6 +163,10 @@ class ShuffleWord(tuple):
     @staticmethod
     def from_str(s):
         return lc.LinearCombination.lift( ShuffleWord( (int(i) for i in s) ) )
+
+    @staticmethod
+    def from_list(ell):
+        return lc.LinearCombination.lift(ShuffleWord( (int(i) for i in ell) ))
 
     def __mul__(ell_1,ell_2):
         """Shuffle product."""
