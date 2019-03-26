@@ -350,6 +350,7 @@ def less_expression_standard_hall(a,b):
     return less_expression_standard_hall(a[0],b[0])
 
 class HallBasis:
+    # TODO use BinaryPlanarTree
     def __init__(self, dim, upto_level, less_expression=less_expression_lyndon):
         assert dim>1
         assert upto_level>0
