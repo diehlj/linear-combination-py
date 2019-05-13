@@ -13,7 +13,15 @@ import itertools
 import time
 from collections import defaultdict
 import numpy as np
+from sympy.core import symbol
+from sympy.core import power
+from sympy.core import mul
 
+def assert_almost_equal(lc_1, lc_2):
+    for x in lc_1.keys():
+        assert np.abs( lc_1.get(x,0) - lc_2.get(x,0) ) < 10e-8
+    for x in lc_2.keys():
+        assert np.abs( lc_1.get(x,0) - lc_2.get(x,0) ) < 10e-8
 
 def merge_with_add(a,b):
     """
@@ -28,9 +36,13 @@ def merge_with_add(a,b):
         res[k] += v
     return res
 
+from sympy.core import symbol
 def _format_coefficient(c):
+    # TODO see how SAGE does this
     if type(c) == int:
         return '{0:+d}'.format( c )
+    elif isinstance(c, symbol.Symbol) or isinstance(c, power.Pow) or isinstance(c, mul.Mul): # XXX
+        return "+"+str(c)
     elif isinstance(c, sympy.Rational):
         if c > 0:
             return "+"+str(c)
@@ -38,10 +50,15 @@ def _format_coefficient(c):
             return str(c)
     elif isinstance(c, numbers.Number):
         return '{0:+.2f}'.format( c )
+    elif isinstance(c, symbol.Symbol):
+        return '+' + str(c)
     elif isinstance(c, tuple(sympy.core.all_classes)): # XXX HACK
         return '{0:+.2f}'.format( complex(c) )
     else:
         return str(c)
+
+def zero():
+    return LinearCombination()
 
 class LinearCombination(dict):
     """A class implementing a linear combination of "stuff" and operations on it.
@@ -76,6 +93,15 @@ class LinearCombination(dict):
             return 1 # XXX HACK for n = 0, need the identity .. Could make LinearCombination store the class of elements ..
         else:
             return reduce( operator.mul, [self] * n )
+
+    def coproduct(self): # XXX Maybe automatically try to apply _all_ nonimplemented functsion like this.
+        # XXX HACK
+        if len(self) == 0:
+            return self
+        else:
+            cl = iter(self).__next__().__class__
+            return self.apply_linear_function(cl.coproduct)
+
 
     @staticmethod
     def from_generator(gen):
@@ -261,6 +287,15 @@ class Tensor(tuple):
         for z in t[0] * t[1]: # python2.7
             yield z
 
+    @staticmethod
+    def m( t ):
+        if len(t) == 2:
+            for z in t[0] * t[1]: # python2.7
+                yield z
+        else:
+            for z in Tensor.m(t[0:-1]):
+                for zz in z[0] * t[-1]:
+                    yield (zz[0], z[1]*zz[1])
 
     @staticmethod
     def fn_otimes_linear(*fns):

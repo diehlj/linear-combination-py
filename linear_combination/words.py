@@ -53,6 +53,42 @@ def projection_equal(n):
             yield (t,1)
     return p
 
+def word_lc_as_vector(lc,dim,upto_level,clazz):
+    total_length = (dim**(upto_level+1) - 1) // (dim-1) # 1+dim+dim**2+..+dim^{upto_level}
+    #print(total_length)
+    v = np.zeros( total_length ) #[]
+    letters = range(1,dim+1)
+    i = 0
+    for level in range(0,upto_level+1):
+        for w in itertools.product(letters,repeat=level):
+            v[i] = lc.get( clazz(w), 0 ) # XXX clazz(w) is expensive ..
+            i += 1
+    return v
+
+def word_lcs_as_vectors(lcs,dim,upto_level,clazz,from_level=0):
+    # This is inefficient on sparse tensors.
+    total_length = (dim**(upto_level+1) - 1) // (dim-1) # 1+dim+dim**2+..+dim^{upto_level}
+
+    letters = range(1,dim+1)
+    words = []
+    for level in range(from_level,upto_level+1):
+        for w in itertools.product(letters,repeat=level):
+            words.append(clazz(w))
+
+    results = []
+    for lc in lcs:
+        v = list(map( lambda w: lc.get(w,0), words ))
+        yield v
+
+def shuffle_word_to_concatenation_word( sw ): # XXX name
+    """Convertion."""
+    yield (ConcatenationWord(sw), 1)
+
+def concatenation_word_to_shuffle_word( cw ): # XXX name
+    """Convertion."""
+    yield (ShuffleWord(cw), 1)
+
+
 #######################
 #######################
 
@@ -138,8 +174,10 @@ class ConcatenationWord(tuple):
             yield (prev[0], -prev[1])
 
         
+
 def shuffle_generator(ell_1,ell_2): # XXX name
     """Generator of all shuffles of the sequences ell_1,ell_2."""
+    # XXX only works for numbers!
     n_1 = len(ell_1)
     n_2 = len(ell_2)
     if n_1 == 0:
@@ -286,39 +324,6 @@ def left_half_shuffle(sw1,sw2):
         for prev in sw1[1:] * sw2:
             yield (sw1[0:1] + prev[0], prev[1])
 
-def word_lc_as_vector(lc,dim,upto_level,clazz):
-    total_length = (dim**(upto_level+1) - 1) // (dim-1) # 1+dim+dim**2+..+dim^{upto_level}
-    #print(total_length)
-    v = np.zeros( total_length ) #[]
-    letters = range(1,dim+1)
-    i = 0
-    for level in range(0,upto_level+1):
-        for w in itertools.product(letters,repeat=level):
-            v[i] = lc.get( clazz(w), 0 ) # XXX clazz(w) is expensive ..
-            i += 1
-    return v
-
-def word_lcs_as_vectors(lcs,dim,upto_level,clazz,from_level=0):
-    # This is inefficient on sparse tensors.
-    total_length = (dim**(upto_level+1) - 1) // (dim-1) # 1+dim+dim**2+..+dim^{upto_level}
-
-    letters = range(1,dim+1)
-    words = []
-    for level in range(from_level,upto_level+1):
-        for w in itertools.product(letters,repeat=level):
-            words.append(clazz(w))
-
-    results = []
-    for lc in lcs:
-        v = list(map( lambda w: lc.get(w,0), words ))
-        yield v
-
-def shuffle_word_to_concatenation_word( sw ): # XXX name
-    yield (ConcatenationWord(sw), 1)
-
-def concatenation_word_to_shuffle_word( cw ): # XXX name
-    yield (ShuffleWord(cw), 1)
-
 
 ###################
 ## HALL BASIS #####
@@ -419,13 +424,6 @@ def concatenation_product_shuffle_word(self,other):
     """Concatenation product."""
     yield (ShuffleWord(self+other),1)
     
-
-def _reciprocateInteger(i,useRational=None):
-    #if useRational is None:
-    #    useRational=_defaultUseRational
-    if useRational:
-        return sympy.Rational(1,i)
-    return 1.0/i
     
 shuffle_unit = lc.LinearCombination.lift( ShuffleWord() )
 def dual_PBW(w, basis):
@@ -448,5 +446,60 @@ def dual_PBW(w, basis):
         base = dual_PBW(word,basis)
         power = functools.reduce(operator.mul,(base for i in range(num)))
         out = out * power
-    out = out * _reciprocateInteger(factor)
+    out = out * _reciprocate_integer(factor)
     return out
+
+
+def convolution_id(cw): # XXX nomenclature: this is (id - unit \circ counit)
+    if len(cw) >= 1:
+        yield (cw, 1)
+
+def star(F,G):
+    def tmp(cw): # XXX this is very slow
+        for tt, cc in cw.coproduct():
+            for xl, cl in F(tt[0]):
+                for xr, cr in G(tt[1]):
+                    for x, c in xl * xr:
+                        yield (x, cl * cr * c * cc)
+    return tmp
+
+def _pi1(upto_level):
+    def tmp(cw):
+        #fn = lc.id
+        for n in range(1,upto_level+1):
+            fn = convolution_id if n == 1 else star(convolution_id, fn)
+            for x, c in fn(cw):
+                yield (x, c * (_reciprocate_integer(n)*(-1)**(n-1)))
+    return tmp
+
+def pi1(lc_1, upto_level):
+    return lc_1.apply_linear_function( _pi1(upto_level) )
+
+def pi1adjoint(lc_1, upto_level):
+    return pi1(lc_1, upto_level)
+
+
+_defaultUseRational=False
+def _reciprocate_integer(i,useRational=None): # XXX this is never used
+    if useRational is None:
+        useRational=_defaultUseRational
+    if useRational:
+        return sympy.Rational(1,i)
+    return 1.0/i
+
+class UseRationalContext:
+    """If you want this library to use Sympy's rational numbers instead of floating point
+    during a block, you can do
+    
+    with UseRationalContext():
+         Block..
+    """
+    def __init__(self, use=True):
+        self.use = use
+    def __enter__(self):
+        global _defaultUseRational
+        self.origUse=_defaultUseRational
+        _defaultUseRational = self.use
+    def __exit__(self,a,b,c):
+        global _defaultUseRational
+        _defaultUseRational = self.origUse
