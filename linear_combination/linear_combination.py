@@ -23,6 +23,9 @@ def assert_almost_equal(lc_1, lc_2):
     for x in lc_2.keys():
         assert np.abs( lc_1.get(x,0) - lc_2.get(x,0) ) < 10e-8
 
+def lift(x):
+    return LinearCombination( {x : 1} )
+
 def merge_with_add(a,b):
     """
     Examples
@@ -37,17 +40,33 @@ def merge_with_add(a,b):
     return res
 
 from sympy.core import symbol
-def _format_coefficient(c):
+def _format_coefficient(position, c):
     # TODO see how SAGE does this
+    #print('c=', c, type(c), repr(c))
+    try:
+        if position == 0 and int(c) == 1:
+            return ''
+        if int(c) == 1:
+            return '+'
+        if int(c) == -1:
+            return '-'
+    except TypeError:
+        pass # Could not convert to int.
     if type(c) == int:
         return '{0:+d}'.format( c )
-    elif isinstance(c, symbol.Symbol) or isinstance(c, power.Pow) or isinstance(c, mul.Mul): # XXX
-        return "+"+str(c)
+    elif isinstance(c, symbol.Symbol) or isinstance(c, power.Pow) or isinstance(c, mul.Mul) or isinstance(c, mul.Add): # XXX
+        return '+('+str(c)+')'
     elif isinstance(c, sympy.Rational):
+        nom, denom = sympy.fraction(c)
         if c > 0:
-            return "+"+str(c)
+            s = '\\tfrac{'+str(nom)+'}{'+str(denom)+'}'
+            if position == 0:
+                return s
+            else:
+                return "+"+s
         else:
-            return str(c)
+            s = '-\\tfrac{'+str(-nom)+'}{'+str(denom)+'}'
+            return s
     elif isinstance(c, numbers.Number):
         return '{0:+.2f}'.format( c )
     elif isinstance(c, symbol.Symbol):
@@ -83,7 +102,7 @@ class LinearCombination(dict):
         return super(LinearCombination,self).__eq__( other )
 
     def __str__(self):
-        return " ".join( map( lambda k: _format_coefficient( self[k] ) + " " + str(k), viewkeys(self) ) )
+        return " ".join( map( lambda x: _format_coefficient( x[0], self[x[1]] ) + " " + str(x[1]), enumerate(viewkeys(self)) ) )
 
     def remove_zeros(self):
         return LinearCombination( dict( filter( lambda x: not x[1] == 0, self.items() ) ) )
@@ -184,6 +203,7 @@ class LinearCombination(dict):
 
     @staticmethod
     def lift(x):
+        print('WARNING: linear_combination.LinearCombination.lift() deprecated. Use linear_combination.lift()')
         return LinearCombination( {x : 1} )
 
     @staticmethod

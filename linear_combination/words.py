@@ -101,11 +101,11 @@ class ConcatenationWord(tuple):
 
     @staticmethod
     def from_str(s):
-        return lc.LinearCombination.lift(ConcatenationWord( (int(i) for i in s) ))
+        return lc.lift(ConcatenationWord( (int(i) for i in s) ))
 
     @staticmethod
     def from_list(ell):
-        return lc.LinearCombination.lift(ConcatenationWord( (int(i) for i in ell) ))
+        return lc.lift(ConcatenationWord( (int(i) for i in ell) ))
 
     def __mul__(self,other):
         """Concatenation product."""
@@ -200,11 +200,11 @@ class ShuffleWord(tuple):
 
     @staticmethod
     def from_str(s):
-        return lc.LinearCombination.lift( ShuffleWord( (int(i) for i in s) ) )
+        return lc.lift( ShuffleWord( (int(i) for i in s) ) )
 
     @staticmethod
     def from_list(ell):
-        return lc.LinearCombination.lift(ShuffleWord( (int(i) for i in ell) ))
+        return lc.lift(ShuffleWord( (int(i) for i in ell) ))
 
     def __mul__(ell_1,ell_2):
         """Shuffle product."""
@@ -425,7 +425,7 @@ def concatenation_product_shuffle_word(self,other):
     yield (ShuffleWord(self+other),1)
     
     
-shuffle_unit = lc.LinearCombination.lift( ShuffleWord() )
+shuffle_unit = lc.lift( ShuffleWord() )
 def dual_PBW(w, basis):
     """Dual PBW basis element."""
     assert isinstance(basis, HallBasis), basis
@@ -436,7 +436,7 @@ def dual_PBW(w, basis):
     a = basis.factor_into_hall_words(w)
     if len(a) == 1:
         return lc.LinearCombination.apply_bilinear_function( concatenation_product_shuffle_word,\
-                lc.LinearCombination.lift( ShuffleWord( (w[0],) ) ), dual_PBW(w[1:], basis) )
+                lc.lift( ShuffleWord( (w[0],) ) ), dual_PBW(w[1:], basis) )
     factor = 1.
     out = shuffle_unit
     for i,j in itertools.groupby(a):

@@ -1,27 +1,28 @@
 from linear_combination.words import *
 from linear_combination.words import _lie_bracket_of_expression
+import linear_combination.linear_combination as lc
 import sympy
 import itertools
 import pytest
 
 def test_concatentation_word():
     def lcw(*args):
-        return lc.LinearCombination.lift( ConcatenationWord( args ) )
+        return lc.lift( ConcatenationWord( args ) )
     assert lcw(1,2,3) + 77 * lcw(1,9) == lc.LinearCombination.from_str("123 + [77] 19", ConcatenationWord)
 
     t = lambda x,y: lc.Tensor( (x,y) ) 
     def cw(*args):
         return ConcatenationWord( args )
-    lc_1 = lc.LinearCombination.lift( cw(1,2) )
-    lc_2 = lc.LinearCombination.lift( cw( 3 ) )
+    lc_1 = lc.lift( cw(1,2) )
+    lc_2 = lc.lift( cw( 3 ) )
     assert lc.LinearCombination( {ConcatenationWord( (1,2,3) ):1} ) == lc_1 * lc_2
 
     o = lc.LinearCombination.otimes( lc_1, lc_1 + 7*lc_2 )
     assert lc.LinearCombination( { t(cw(1,2,1,2), cw(1,2,1,2)):1, t(cw(1,2,1,2),cw(1,2,3)):7, t(cw(1,2,1,2),cw(3,1,2)):7, t(cw(1,2,1,2),cw(3,3)):49} )\
             == o * o
 
-    lc_1 = lc.LinearCombination.lift( cw(1,2) )
-    lc_2 = lc.LinearCombination.lift( cw( 3,4,5) )
+    lc_1 = lc.lift( cw(1,2) )
+    lc_2 = lc.lift( cw( 3,4,5) )
 
     def id_otimes_coproduct(t):
         for x, c in ConcatenationWord.coproduct( t[1] ):
@@ -46,8 +47,8 @@ def test_concatentation_word():
             == lc_1.apply_linear_function(ConcatenationWord.coproduct)\
                 .apply_linear_function( lc.Tensor.fn_otimes_linear(lc.id,ConcatenationWord.antipode) )\
                 .apply_linear_function( lc.Tensor.m12 )
-    assert lc.LinearCombination.lift(cw()) \
-            == lc.LinearCombination.lift(cw())\
+    assert lc.lift(cw()) \
+            == lc.lift(cw())\
                 .apply_linear_function(ConcatenationWord.coproduct)\
                 .apply_linear_function( lc.Tensor.fn_otimes_linear(lc.id,ConcatenationWord.antipode) )\
                 .apply_linear_function( lc.Tensor.m12 )
@@ -67,7 +68,7 @@ def test_concatentation_word():
     # Hence we need to transform one of them into the other.
     assert 1 == lc.LinearCombination.inner_product( lc_1, lc_1 )
 
-    lc_sw_1 = lc.LinearCombination.lift( ShuffleWord( (1,2) ) )
+    lc_sw_1 = lc.lift( ShuffleWord( (1,2) ) )
     assert 0 == lc.LinearCombination.inner_product( lc_sw_1, lc_1 )
     assert 1 == lc.LinearCombination.inner_product( lc_sw_1.apply_linear_function( shuffle_word_to_concatenation_word ), lc_1 )
 
@@ -76,22 +77,22 @@ def test_shuffle_word():
     t = lambda x,y: lc.Tensor( (x,y) ) 
     def sw(*args):
         return ShuffleWord( args )
-    lc_1 = lc.LinearCombination.lift( sw( 1,2 ) )
-    lc_2 = lc.LinearCombination.lift( sw( 3, ) )
+    lc_1 = lc.lift( sw( 1,2 ) )
+    lc_2 = lc.lift( sw( 3, ) )
     assert lc.LinearCombination( {sw( 1,2,3 ):1, sw( 1,3,2 ):1, sw( 3,1,2 ):1} ) \
             == lc_1 * lc_2
     assert lc.LinearCombination( {t( sw(), sw(1,2) ):1, t(sw(1),sw(2)):1, t( sw(1,2), sw() ):1} ) \
             == lc_1.apply_linear_function( ShuffleWord.coproduct )
 
     # Condition on product vs coproduct: \Delta( \tau \tau' ) = \Delta(\tau) \Delta(\tau').
-    lc_1 = lc.LinearCombination.lift( sw(1,2) )
-    lc_2 = lc.LinearCombination.lift( sw() )
+    lc_1 = lc.lift( sw(1,2) )
+    lc_2 = lc.lift( sw() )
     assert (lc_1 * lc_2).apply_linear_function( ShuffleWord.coproduct ) \
             == lc_1.apply_linear_function( ShuffleWord.coproduct ) \
              * lc_2.apply_linear_function( ShuffleWord.coproduct )
 
-    lc_1 = lc.LinearCombination.lift( sw(1,2) )
-    lc_2 = lc.LinearCombination.lift( sw(3,) )
+    lc_1 = lc.lift( sw(1,2) )
+    lc_2 = lc.lift( sw(3,) )
     assert (lc_1 * lc_2).apply_linear_function( ShuffleWord.coproduct ) \
             == lc_1.apply_linear_function( ShuffleWord.coproduct ) \
              * lc_2.apply_linear_function( ShuffleWord.coproduct )
@@ -101,8 +102,8 @@ def test_shuffle_word():
             == lc_1.apply_linear_function(ShuffleWord.coproduct)\
                 .apply_linear_function( lc.Tensor.fn_otimes_linear(lc.id,ShuffleWord.antipode) )\
                 .apply_linear_function( lc.Tensor.m12 )
-    assert lc.LinearCombination.lift(sw()) \
-            == lc.LinearCombination.lift(sw())\
+    assert lc.lift(sw()) \
+            == lc.lift(sw())\
                 .apply_linear_function(ShuffleWord.coproduct)\
                 .apply_linear_function( lc.Tensor.fn_otimes_linear(lc.id,ShuffleWord.antipode) )\
                 .apply_linear_function( lc.Tensor.m12 )
@@ -117,7 +118,7 @@ def test_shuffle_word():
 
 def test_half_shuffle_area():
     def lsw(*args):
-        return lc.LinearCombination.lift( ShuffleWord( args ) )
+        return lc.lift( ShuffleWord( args ) )
     assert ConcatenationWord( (1,) ) + ConcatenationWord( (2,) ) == ConcatenationWord( (1,2) )
     assert ShuffleWord( (1,) ) + ShuffleWord( (2,) ) == ShuffleWord( (1,2) )
     assert ShuffleWord( (1,2,3) )[:-1] == ShuffleWord( (1,2) )
@@ -128,7 +129,7 @@ def test_half_shuffle_area():
 
 def test_r():
     def lcw(*args):
-        return lc.LinearCombination.lift( ConcatenationWord( args ) )
+        return lc.lift( ConcatenationWord( args ) )
 
     assert lcw(1) == lcw(1).apply_linear_function( r )
     assert lcw(1,2) - lcw(2,1) == lcw(1,2).apply_linear_function( r )
@@ -186,7 +187,7 @@ def test_br(): # TODO
     def _lie_bracket_of_expression2( expression ):
         """Lie bracket of an expression like [[1],[[1],[2]]]."""
         if len(expression) == 1:
-            return lc.LinearCombination.lift( ConcatenationWord( (expression[0],) ) )
+            return lc.lift( ConcatenationWord( (expression[0],) ) )
         else:
             return lie_bracket( _lie_bracket_of_expression2(expression[0]), _lie_bracket_of_expression2(expression[1]) )
     print( _lie_bracket_of_expression2( ( (1,), ((2,),(3,))) ) )
@@ -211,3 +212,47 @@ def test_br(): # TODO
     end = time.time()
     print(end - start)
     # TODO CONTINUE HERE
+
+def test_pi1_pi1adjoint():
+    lc_1 = parse_concatenation('12-21')
+    assert pi1(lc_1, 2) == lc_1
+
+    lc_1 = parse_concatenation('12')
+    assert pi1(lc_1, 2) == pi1(pi1(lc_1, 2),2)
+
+    lc_1 = parse_concatenation('123')
+    lc.assert_almost_equal( pi1(lc_1, 3), pi1(pi1(lc_1, 3),3) )
+
+
+    dim = 2 
+    n = 3
+    for w in itertools.product( range(1,dim+1), repeat=n ):
+        left = lc.lift( ShuffleWord(w) )
+        for v in itertools.product( range(1,dim+1), repeat=n ):
+            right = lc.lift( ConcatenationWord(v) )
+            assert inner_product_sw_cw(left, pi1(right,n)) == inner_product_sw_cw(pi1adjoint(left,n), right )
+
+    # pi1adjoint does _not_ depend on the realization of an element in the dual of Lie inside of T(\R^d).
+    assert pi1adjoint( parse_shuffle('12'), 2 ) == pi1adjoint( parse_shuffle('[0.5] 12 - [0.5] 21'), 2)
+    # For everything orthogonal on Lie, the result should be zero.
+    zero = lc.LinearCombination()
+    assert pi1adjoint( parse_shuffle('11'), 2 ) == zero
+    assert pi1adjoint( parse_shuffle('22'), 2 ) == zero
+    lc.assert_almost_equal(  pi1adjoint( parse_shuffle('12') * parse_shuffle('21'), 4 ), zero )
+
+def test_star():
+    def f(cw):
+        yield (ConcatenationWord( reversed(cw) ), 1)
+    def g(cw):
+        yield (ConcatenationWord( cw + (7,) + cw ), 1)
+    f_star_g = star(f,g)
+
+    lc_1 = parse_concatenation('123')
+
+    assert lc_1.apply_linear_function( star(f,star(f,g)) )\
+           ==\
+           lc_1.apply_linear_function( star( star(f,f), g) )
+    assert lc_1.apply_linear_function( star(star(lc.id,lc.id), lc.id) ) \
+           ==\
+           lc_1.apply_linear_function( star( lc.id, star(lc.id, lc.id) ) )
+

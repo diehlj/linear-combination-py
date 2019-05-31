@@ -40,7 +40,7 @@ def test_trees():
                 else:
                     return wrap(z)
             return tuple( q(x) for x in ell )
-        return lc.LinearCombination.lift( LabeledBinaryPlanarTree(wrap(x)) )
+        return lc.lift( LabeledBinaryPlanarTree(wrap(x)) )
 
     lcs = list(map(lbpt, [ [1,1], [1,2], [2,1], [2,2] ]))
     vectors = list(map(lambda x: labeled_binary_planar_tree_as_vector(x,2,2), lcs))
