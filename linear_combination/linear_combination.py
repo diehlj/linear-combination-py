@@ -50,7 +50,7 @@ def _format_coefficient(position, c):
             return '+'
         if int(c) == -1:
             return '-'
-    except TypeError:
+    except (TypeError, ValueError):
         pass # Could not convert to int.
     if type(c) == int:
         return '{0:+d}'.format( c )
