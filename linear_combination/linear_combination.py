@@ -71,7 +71,7 @@ def _format_coefficient(position, c):
         return '{0:+.2f}'.format( c )
     elif isinstance(c, symbol.Symbol):
         return '+' + str(c)
-    elif isinstance(c, tuple(sympy.core.all_classes)): # XXX HACK
+    elif isinstance(c, tuple(sympy.core.core.all_classes)): # XXX HACK
         return '{0:+.2f}'.format( complex(c) )
     else:
         return str(c)
@@ -164,7 +164,7 @@ class LinearCombination(dict):
         return LinearCombination(res).remove_zeros()
 
     def __mul__(x,y):
-        if isinstance(y, numbers.Number) or isinstance(y, tuple(sympy.core.all_classes)):
+        if isinstance(y, numbers.Number) or isinstance(y, tuple(sympy.core.core.all_classes)):
             return LinearCombination( dict( [ (k, y * x[k]) for k in viewkeys(x)]) )
         elif isinstance(y, LinearCombination):
             res = defaultdict(int)

@@ -18,14 +18,22 @@ import math
 def parse_concatenation(s, sympy_coefficients=False): # XXX name
     return lc.LinearCombination.from_str( s, ConcatenationWord, sympy_coefficients )
 
+parse_c = parse_concatenation
+
 def parse_shuffle(s, sympy_coefficients=False): # XXX name
     return lc.LinearCombination.from_str( s, ShuffleWord, sympy_coefficients )
+
+parse_s = parse_shuffle
 
 def inner_product_sw_cw(left,right):
     return lc.LinearCombination.inner_product( left.apply_linear_function( shuffle_word_to_concatenation_word ), right )
 
 def lie_bracket(lc_1, lc_2):
     return lc.LinearCombination.apply_bilinear_function(ConcatenationWord.lie_bracket, lc_1, lc_2)
+
+def hs(lc1,lc2):
+    """Half shuffle."""
+    return lc.LinearCombination.apply_bilinear_function( half_shuffle, lc1, lc2 )
 
 def area(lc_1, lc_2):
     return lc.LinearCombination.apply_bilinear_function(ShuffleWord.area, lc_1, lc_2)
@@ -101,10 +109,12 @@ class ConcatenationWord(tuple):
 
     @staticmethod
     def from_str(s):
+        """Careful: Returns a LinearCombination."""
         return lc.lift(ConcatenationWord( (int(i) for i in s) ))
 
     @staticmethod
     def from_list(ell):
+        """Careful: Returns a LinearCombination."""
         return lc.lift(ConcatenationWord( (int(i) for i in ell) ))
 
     def __mul__(self,other):
@@ -310,7 +320,7 @@ def D(cw):
     """ w \\mapsto |w| """
     yield (cw, len(cw))
 
-def half_shuffle(sw1,sw2):
+def half_shuffle(sw1,sw2): # XXX change naming when it returns a generator
     if len(sw2) == 1:
         yield (sw1 + sw2,1)
     else:
