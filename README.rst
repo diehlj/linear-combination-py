@@ -29,8 +29,6 @@ Installation
 
 Install with::
 
-    pip install linear-combination-py
-or::
     pip install git+git://github.com/diehlj/linear-combination-py
 
 Copyright © 2018 Joscha Diehl
