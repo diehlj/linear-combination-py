@@ -214,7 +214,7 @@ class LinearCombination(dict):
             from sympy.parsing.sympy_parser import parse_expr
             coeff_s = pp.QuotedString("[",endQuoteChar="]")
             coeff_s.setParseAction(lambda t: [parse_expr(t[0])])
-            coeff = pp.Optional(coeff_s,1)
+            coeff = pp.Optional(coeff_s,sympy.core.numbers.Integer(1))
         else:        
             coeff_i=pp.Suppress("[")+pp.Word(pp.nums)+pp.Suppress("]")
             coeff_i.setParseAction(lambda t: [int(t[0])])
@@ -222,21 +222,16 @@ class LinearCombination(dict):
                                                 "."+
                                                 pp.Optional(pp.Word(pp.nums)))+pp.Suppress("]")
             coeff_f.setParseAction(lambda t: [float(t[0])])
-            coeff=pp.Optional(coeff_i|coeff_f,1)
-        if six.PY2:
-            minus = pp.Literal("-")
-        else:
-            #In python 3, where str is unicode, it is easy to allow the minus sign character.
-            #This means you can copy from a formula in a pdf
-            minus = pp.Literal("-")|pp.Literal(chr(0x2212))
-            minus.setParseAction(lambda t:["-"])
-        firstTerm=pp.Optional(minus,"+")+coeff+pp.Optional(element_parser,"")
-        otherTerm=(pp.Literal("+")|minus)+coeff+pp.Optional(element_parser,"")
-        expn = pp.Group(firstTerm)+pp.ZeroOrMore(pp.Group(otherTerm))
+            coeff = pp.Optional(coeff_i|coeff_f,1)
+        minus = pp.Literal("-")|pp.Literal(chr(0x2212))
+        minus.setParseAction(lambda t:["-"])
+        firstTerm = pp.Optional(minus,"+") + coeff + pp.Optional(element_parser,"")
+        otherTerm = (pp.Literal("+")|minus) + coeff + pp.Optional(element_parser,"")
+        expn = pp.Group(firstTerm) + pp.ZeroOrMore(pp.Group(otherTerm))
         exp = expn.parseString(s,True)
-        x = [(b if a=="+" else -b)*clazz.from_str(c) for a,b,c in exp]
+        x = [ (b if a=="+" else -b) * clazz.from_str(c) for a,b,c in exp ]
         out = functools.reduce(operator.add,x)
-        return out  
+        return out
 
     @staticmethod
     def otimes(lc1,lc2): # XXX shouldnt this be in Tensor?

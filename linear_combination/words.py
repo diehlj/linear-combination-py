@@ -486,16 +486,21 @@ def pi1(lc_1, upto_level):
     return lc_1.apply_linear_function( _pi1(upto_level) )
 
 def pi1adjoint(lc_1, upto_level):
+    # The formula is the same as the one for pi1,
+    # but note that this one here is called with
+    # (linear combinations of) ShuffleWord.
+    # Hence a different product/coproduct is used!
     return pi1(lc_1, upto_level)
 
 
 _defaultUseRational=False
-def _reciprocate_integer(i,useRational=None): # XXX this is never used
+def _reciprocate_integer(i, useRational=None):
     if useRational is None:
-        useRational=_defaultUseRational
+        useRational = _defaultUseRational
     if useRational:
         return sympy.Rational(1,i)
-    return 1.0/i
+    else:
+        return 1.0/i
 
 class UseRationalContext:
     """If you want this library to use Sympy's rational numbers instead of floating point
