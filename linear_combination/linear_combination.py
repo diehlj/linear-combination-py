@@ -100,7 +100,7 @@ class LinearCombination(dict):
         return super(LinearCombination,self).__eq__( other )
 
     def __str__(self):
-        return " ".join( map( lambda x: _format_coefficient( x[0], self[x[1]] ) + " " + str(x[1]), enumerate(viewkeys(self)) ) )
+        return " ".join( map( lambda x: _format_coefficient( x[0], self[x[1]] ) + " " + str(x[1]), enumerate(self.keys()) ) )
 
     def remove_zeros(self):
         return LinearCombination( dict( filter( lambda x: not x[1] == 0, self.items() ) ) )
@@ -163,7 +163,7 @@ class LinearCombination(dict):
 
     def __mul__(x,y):
         if isinstance(y, numbers.Number) or isinstance(y, tuple(sympy.core.core.all_classes)):
-            return LinearCombination( dict( [ (k, y * x[k]) for k in viewkeys(x)]) )
+            return LinearCombination( dict( [ (k, y * x[k]) for k in x.keys()]) )
         elif isinstance(y, LinearCombination):
             res = defaultdict(int)
             try:
