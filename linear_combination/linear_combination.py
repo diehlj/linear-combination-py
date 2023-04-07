@@ -3,8 +3,6 @@ import numbers
 import operator
 import sympy
 from functools import reduce
-import six
-from six import viewkeys
 
 import pyparsing as pp
 
@@ -253,14 +251,6 @@ def lie_bracket(x1,x2):
         yield (prev[0], prev[1])
     for prev in x2 * x1:
         yield (prev[0], -prev[1])
-
-#import collections
-#if not six.PY2:
-#    basestring = str
-#def issequenceforme(obj):
-#    if isinstance(obj, basestring):
-#        return False
-#    return isinstance(obj, collections.Sequence)
 
 def _flatten_tensor(t):
     ret = []
